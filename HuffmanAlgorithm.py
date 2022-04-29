@@ -1,18 +1,24 @@
 # Seyyedali Shohadaalhosseini
 from itertools import chain
+
+import matplotlib.pyplot
 import matplotlib.image as mpimg
+from numpy import array
 
 
 def mainFunc():
     pixels_flattened, img_pixels_matrix = Read_input()
     symbols, frequencies = calculateThePixelsAndFrequency(pixels_flattened, img_pixels_matrix)
     symbolAndFrequency = connectSymbolsToFrequencies(symbols, frequencies)
+    codesOfData = huffmanCoding(symbolAndFrequency)
+    codedDataSent = huffmanSendCodedData(img_pixels_matrix, codesOfData)
+    huffmanDecodeReceivedCodedData(codedDataSent, codesOfData)
 
+
+def huffmanCoding(symbolAndFrequency):
     symbolsCode = list()
     TreeNodes = list()
     rootNodes = list()
-
-    # This must go to the loop
     c = 0
     while len(symbolAndFrequency) > 1:
         SortedSymbolFreq = sortTheDataBy(symbolAndFrequency)
@@ -51,8 +57,6 @@ def mainFunc():
                 # add the 1 to it
                 symbIndex = symbolsIn_symbolsCode.index(symb)
                 symbolsCode[symbIndex][1] = f"1{symbolsCode[symbIndex][1]}"
-            # print("Broke Here 1")
-            # break
 
         elif str(low[0]) in rootNodes:
             #  deleting the repeated node to replace with new one
@@ -64,20 +68,9 @@ def mainFunc():
             TreeNodes.append([f"{low[0]}-{lower[0]}", lowestSum])  # Append the new one
             symbolAndFrequency.append([f"{low[0]}-{lower[0]}", lowestSum])
 
-            # print(low[0])
-            # print(type(low[0]))
-            # print(len(low[0]))
-            # print(listToCheck)
-            # print(type(listToCheck))
-            # print(symbolsCode)
-            # print(symbolsIn_symbolsCode)
             listToCheck = low[0].split("-")
             symbolsIn_symbolsCode = [s[0] for s in symbolsCode]
             for symb in listToCheck:
-                # print(symb)
-                # print(type(symb))
-                # print(len(symb))
-
                 # Find the symb
                 # add the 0 to it
                 symbIndex = symbolsIn_symbolsCode.index(symb)
@@ -85,8 +78,6 @@ def mainFunc():
 
             symbolsCode.append([f"{lower[0]}", "1"])
 
-            # print("Broke Here 2")
-            # break
         elif str(lower[0]) in rootNodes:
             #  deleting the repeated node to replace with new one
             index_Counter = 0
@@ -107,8 +98,6 @@ def mainFunc():
 
             symbolsCode.append([f"{low[0]}", "0"])
 
-            # print("Broke Here 3")
-            # break
         else:
             symbolsCode.append([f"{low[0]}", "0"])
             symbolsCode.append([f"{lower[0]}", "1"])
@@ -117,11 +106,10 @@ def mainFunc():
         c += 1
 
     print("This is loop Counter: ", c)
-    # print("This is Sorted Symbol, Freq: {}\n".format(SortedSymbolFreq))
-    print("This is TreeNodes length: {}".format(len(TreeNodes)))
+    print("This is TreeNodes length: {}".format(len(TreeNodes[-1])))
     print("This is TreeNodes", end="")
     c = 0
-    for i in TreeNodes:
+    for i in TreeNodes[-1]:
         if c % 1 == 0:
             print()
         print(i, end=" ")
@@ -136,9 +124,7 @@ def mainFunc():
         print(i, end=" ")
         c += 1
 
-    # print(SortedSymbolFreq)
-    # print("\n\n", symbolAndFrequency)
-
+    return symbolsCode
 
 def Read_input(imagePath='D:\Teachers\DR  M. Rostaee\Multimedia\Exercises\HW1\img0-gray.jpg'):
     img_pixels_matrix = mpimg.imread(imagePath)
@@ -180,6 +166,42 @@ def returnTwoLowest(SymbolFreq):
     low, lower = SymbolFreq[-2], SymbolFreq[-1]
     symbolAndFrequency = SymbolFreq[:-2]
     return low, lower, symbolAndFrequency
+
+
+def huffmanSendCodedData(imageMatrix, codesOfData):
+    dataSent = list()  # This list shapes must be (300, 302) as our main image is
+
+    CodesIndexes = [ind[0] for ind in codesOfData]
+    for eachline in imageMatrix:
+        tempList = list()
+        for eachValue in eachline:
+            index = CodesIndexes.index(str(eachValue))
+            tempList.append(codesOfData[index][1])
+        dataSent.append(tempList)
+    return dataSent
+
+
+def huffmanDecodeReceivedCodedData(codedDataReceived, codesOfData):
+    dataReceived = list()
+    print("\n\n\n", codedDataReceived)
+
+    ValuesIndexes = [ind[1] for ind in codesOfData]
+    for eachLine in codedDataReceived:
+        tempList = list()
+        for eachValue in eachLine:
+            index = ValuesIndexes.index(str(eachValue))
+            tempList.append(int(codesOfData[index][0]))
+        dataReceived.append(tempList)
+
+    return showTheDecodedData(dataReceived)
+
+
+def showTheDecodedData(dataToShow):
+    # First we convert it to the array
+    dataArray = array(dataToShow)
+    print(dataArray)
+    matplotlib.pyplot.imshow(dataArray, cmap='gray')
+    matplotlib.pyplot.show()
 
 
 mainFunc()
