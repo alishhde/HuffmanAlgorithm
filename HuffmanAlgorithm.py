@@ -1,21 +1,43 @@
-# Seyyedali Shohadaalhosseini
+# Seyyedali Shohadaalhosseini - alishhde
+import math
 from itertools import chain
-
+from numpy import array
 import matplotlib.pyplot
 import matplotlib.image as mpimg
-from numpy import array
 
 
-def mainFunc():
+def main():
+    print("Reading your Input image...")
     pixels_flattened, img_pixels_matrix = Read_input()
+
+    print("Calculating Symbols and their frequencies...")
     symbols, frequencies = calculateThePixelsAndFrequency(pixels_flattened, img_pixels_matrix)
     symbolAndFrequency = connectSymbolsToFrequencies(symbols, frequencies)
-    codesOfData = huffmanCoding(symbolAndFrequency)
+
+    print("Encoding data...")
+    codesOfData = huffmanEncoding(symbolAndFrequency)
+    print("Data encoded.")
+
     codedDataSent = huffmanSendCodedData(img_pixels_matrix, codesOfData)
-    huffmanDecodeReceivedCodedData(codedDataSent, codesOfData)
+
+    print("Decoding data...")
+    huffmanDecoding(codedDataSent, codesOfData)
+    print("Data decoded.")
+
+    entropy = sourceEntropy(frequencies)
+    print("The Entropy is :", entropy)
+
+    minimumAverage = minimumAverageNumberOfBit(codesOfData, symbolAndFrequency)
+    print("This is Minimum Average Number Of Bit: ", minimumAverage)
 
 
-def huffmanCoding(symbolAndFrequency):
+def Read_input(imagePath='D:\Teachers\DR  M. Rostaee\Multimedia\Exercises\HW1\img0-gray.jpg'):
+    img_pixels_matrix = mpimg.imread(imagePath)
+    img_pixels_flattened = list(chain(*img_pixels_matrix))  # here we have flattened our list
+    return img_pixels_flattened, img_pixels_matrix
+
+
+def huffmanEncoding(symbolAndFrequency):
     symbolsCode = list()
     TreeNodes = list()
     rootNodes = list()
@@ -24,12 +46,8 @@ def huffmanCoding(symbolAndFrequency):
         SortedSymbolFreq = sortTheDataBy(symbolAndFrequency)
         low, lower, symbolAndFrequency = returnTwoLowest(SortedSymbolFreq)
         lowestSum = low[1] + lower[1]
-        # print(low, lower)
-
         if len(TreeNodes) > 0:
             rootNodes = [val[0] for val in TreeNodes]
-
-        # print("This is root", TreeNodes)
         if str(low[0]) in rootNodes and str(lower[0]) in rootNodes:
             #  deleting the repeated node to replace with new one
             index_Counter = 0
@@ -39,24 +57,20 @@ def huffmanCoding(symbolAndFrequency):
                 elif val[0] == str(lower[0]):
                     del TreeNodes[index_Counter]
                 index_Counter += 1
-            TreeNodes.append([f"{low[0]}-{lower[0]}", lowestSum])  # Append the new one
-            symbolAndFrequency.append([f"{low[0]}-{lower[0]}", lowestSum])
+            TreeNodes.append(["{}-{}".format(low[0], lower[0]), lowestSum])  # Append the new one
+            symbolAndFrequency.append(["{}-{}".format(low[0], lower[0]), lowestSum])
 
             listToCheck = low[0].split("-")
             symbolsIn_symbolsCode = [s[0] for s in symbolsCode]
             for symb in listToCheck:
-                # Find the symb
-                # add the 0 to it
                 symbIndex = symbolsIn_symbolsCode.index(symb)
-                symbolsCode[symbIndex][1] = f"0{symbolsCode[symbIndex][1]}"
+                symbolsCode[symbIndex][1] = "0{}".format(symbolsCode[symbIndex][1])
 
             listToCheck = lower[0].split("-")
             symbolsIn_symbolsCode = [s[0] for s in symbolsCode]
             for symb in listToCheck:
-                # Find the symb
-                # add the 1 to it
                 symbIndex = symbolsIn_symbolsCode.index(symb)
-                symbolsCode[symbIndex][1] = f"1{symbolsCode[symbIndex][1]}"
+                symbolsCode[symbIndex][1] = "1{}".format(symbolsCode[symbIndex][1])
 
         elif str(low[0]) in rootNodes:
             #  deleting the repeated node to replace with new one
@@ -65,18 +79,16 @@ def huffmanCoding(symbolAndFrequency):
                 if val[0] == str(low[0]):
                     del TreeNodes[index_Counter]
                 index_Counter += 1
-            TreeNodes.append([f"{low[0]}-{lower[0]}", lowestSum])  # Append the new one
-            symbolAndFrequency.append([f"{low[0]}-{lower[0]}", lowestSum])
+            TreeNodes.append(["{}-{}".format(low[0], lower[0]), lowestSum])  # Append the new one
+            symbolAndFrequency.append(["{}-{}".format(low[0], lower[0]), lowestSum])
 
             listToCheck = low[0].split("-")
             symbolsIn_symbolsCode = [s[0] for s in symbolsCode]
             for symb in listToCheck:
-                # Find the symb
-                # add the 0 to it
                 symbIndex = symbolsIn_symbolsCode.index(symb)
-                symbolsCode[symbIndex][1] = f"0{symbolsCode[symbIndex][1]}"
+                symbolsCode[symbIndex][1] = "0{}".format(symbolsCode[symbIndex][1])
 
-            symbolsCode.append([f"{lower[0]}", "1"])
+            symbolsCode.append(["{}".format(lower[0]), "1"])
 
         elif str(lower[0]) in rootNodes:
             #  deleting the repeated node to replace with new one
@@ -85,56 +97,24 @@ def huffmanCoding(symbolAndFrequency):
                 if val[0] == str(lower[0]):
                     del TreeNodes[index_Counter]
                 index_Counter += 1
-            TreeNodes.append([f"{low[0]}-{lower[0]}", lowestSum])  # Append the new one
-            symbolAndFrequency.append([f"{low[0]}-{lower[0]}", lowestSum])
+            TreeNodes.append(["{}-{}".format(low[0], lower[0]), lowestSum])  # Append the new one
+            symbolAndFrequency.append(["{}-{}".format(low[0], lower[0]), lowestSum])
 
             listToCheck = lower[0].split("-")
             symbolsIn_symbolsCode = [s[0] for s in symbolsCode]
             for symb in listToCheck:
-                # Find the symb
-                # add the 0 to it
                 symbIndex = symbolsIn_symbolsCode.index(symb)
-                symbolsCode[symbIndex][1] = f"1{symbolsCode[symbIndex][1]}"
+                symbolsCode[symbIndex][1] = "1{}".format(symbolsCode[symbIndex][1])
 
-            symbolsCode.append([f"{low[0]}", "0"])
+            symbolsCode.append(["{}".format(low[0]), "0"])
 
         else:
-            symbolsCode.append([f"{low[0]}", "0"])
-            symbolsCode.append([f"{lower[0]}", "1"])
-            TreeNodes.append([f"{low[0]}-{lower[0]}", lowestSum])
-            symbolAndFrequency.append([f"{low[0]}-{lower[0]}", lowestSum])
+            symbolsCode.append(["{}".format(low[0]), "0"])
+            symbolsCode.append(["{}".format(lower[0]), "1"])
+            TreeNodes.append(["{}-{}".format(low[0], lower[0]), lowestSum])
+            symbolAndFrequency.append(["{}-{}".format(low[0], lower[0]), lowestSum])
         c += 1
-
-    print("This is loop Counter: ", c)
-    print("This is TreeNodes length: {}".format(len(TreeNodes[-1])))
-    print("This is TreeNodes", end="")
-    c = 0
-    for i in TreeNodes[-1]:
-        if c % 1 == 0:
-            print()
-        print(i, end=" ")
-        c += 1
-
-    print("\n\nThis is SymbolCode length: {}".format(len(symbolsCode)), end="")
-    print("\n\nThis is SymbolCode", end="")
-    c = 0
-    for i in symbolsCode:
-        if c % 9 == 0:
-            print()
-        print(i, end=" ")
-        c += 1
-
     return symbolsCode
-
-def Read_input(imagePath='D:\Teachers\DR  M. Rostaee\Multimedia\Exercises\HW1\img0-gray.jpg'):
-    img_pixels_matrix = mpimg.imread(imagePath)
-    # print(img_pixels_matrix)
-    # print(img_pixels_matrix.shape)
-    # print(type(img_pixels_matrix))
-    # print(img_pixels_matrix[1].shape)
-    img_pixels_flattened = list(chain(*img_pixels_matrix))  # here we have flattened our list
-    # print(img_pixels_flattened)
-    return img_pixels_flattened, img_pixels_matrix
 
 
 def calculateThePixelsAndFrequency(img_pixels_flattened, img_pixels_matrix):
@@ -170,8 +150,8 @@ def returnTwoLowest(SymbolFreq):
 
 def huffmanSendCodedData(imageMatrix, codesOfData):
     dataSent = list()  # This list shapes must be (300, 302) as our main image is
-
     CodesIndexes = [ind[0] for ind in codesOfData]
+
     for eachline in imageMatrix:
         tempList = list()
         for eachValue in eachline:
@@ -181,11 +161,10 @@ def huffmanSendCodedData(imageMatrix, codesOfData):
     return dataSent
 
 
-def huffmanDecodeReceivedCodedData(codedDataReceived, codesOfData):
+def huffmanDecoding(codedDataReceived, codesOfData):
     dataReceived = list()
-    print("\n\n\n", codedDataReceived)
-
     ValuesIndexes = [ind[1] for ind in codesOfData]
+
     for eachLine in codedDataReceived:
         tempList = list()
         for eachValue in eachLine:
@@ -199,9 +178,28 @@ def huffmanDecodeReceivedCodedData(codedDataReceived, codesOfData):
 def showTheDecodedData(dataToShow):
     # First we convert it to the array
     dataArray = array(dataToShow)
-    print(dataArray)
     matplotlib.pyplot.imshow(dataArray, cmap='gray')
+    matplotlib.pyplot.imsave("Huffman Image.jpg", dataArray, cmap='gray')
     matplotlib.pyplot.show()
 
 
-mainFunc()
+def sourceEntropy(frequencies):
+    entropy = 0
+    for f in frequencies:
+        entropy += f * math.log2(f)
+    return entropy * (-1)
+
+
+def minimumAverageNumberOfBit(codes, probability):
+    minimumBit = 0
+    for f in probability:
+        for t in codes:
+            if t[0] == str(f[0]):
+                nBit = len(t[1])
+                break
+        minimumBit += nBit * f[1]
+    return minimumBit
+
+
+if __name__ == '__main__':
+    main()
