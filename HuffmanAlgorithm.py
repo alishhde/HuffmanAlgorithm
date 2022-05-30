@@ -203,3 +203,4 @@ def minimumAverageNumberOfBit(codes, probability):
 
 if __name__ == '__main__':
     main()
+    print("This print has been added recently")
